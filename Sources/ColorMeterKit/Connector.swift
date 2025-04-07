@@ -112,7 +112,10 @@ class Connector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             self.service = service
             peripheral.discoverCharacteristics([CBUUID(string: Self.characteristic)], for: service)
         } else {
-            peripheral.discoverCharacteristics(nil, for: service)
+            peripheral.services?.forEach({
+                serv in
+                peripheral.discoverCharacteristics(nil, for: serv)
+            })
         }
     }
     
@@ -123,8 +126,8 @@ class Connector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             statePublish.onNext(.init(state: .connected, peripheral: peripheral))
         } else {
             service.characteristics?.forEach({
-                characteristic in
-                peripheral.setNotifyValue(true, for: characteristic)
+                value in
+                peripheral.setNotifyValue(true, for: value)
             })
         }
     }
