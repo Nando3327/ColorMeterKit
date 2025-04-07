@@ -111,6 +111,8 @@ class Connector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         if let services = peripheral.services, let service = services.first(where: { $0.uuid.uuidString == Self.service }) {
             self.service = service
             peripheral.discoverCharacteristics([CBUUID(string: Self.characteristic)], for: service)
+        } else {
+            peripheral.discoverCharacteristics(nil, for: service)
         }
     }
     
