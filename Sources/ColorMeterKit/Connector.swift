@@ -119,11 +119,29 @@ class Connector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             self.characteristic = characteristic
             peripheral.setNotifyValue(true, for: characteristic)
             statePublish.onNext(.init(state: .connected, peripheral: peripheral))
+        } else {
+            service.characteristics?.forEach({
+                characteristic in
+                peripheral.setNotifyValue(true, for: characteristic)
+            })
         }
     }
     
-    
+    let batteryLevelCharacteristicUUID = CBUUID(string: "AE41")
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        let characteristicFind = characteristic.uuid.uuidString == Self.characteristic;
+        if characteristic.uuid == batteryLevelCharacteristicUUID {
+                    if let data = characteristic.value {
+                        let batteryLevel = data[0]
+                        print("Battery Level: \(batteryLevel)%")
+                    }
+                }
+        if !characteristicFind {
+            print("characteristicFindOtherValue", characteristic.uuid.uuidString)
+            print("characteristicFindOtherValue", characteristic.value)
+            return
+        }
+        print("characteristicFind", characteristic.uuid.uuidString)
         statePublish.onNext(.init(state: .notification, data: characteristic.value, peripheral: peripheral))
     }
 }
