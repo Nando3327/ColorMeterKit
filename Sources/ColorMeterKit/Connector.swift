@@ -108,62 +108,22 @@ class Connector: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        peripheral.services?.forEach({
-            serv in
-            if(serv.uuid.uuidString == Self.service){
-                self.service = service
-            }
-            peripheral.discoverCharacteristics(nil, for: serv)
-        })
-//        if let services = peripheral.services, let service = services.first(where: { $0.uuid.uuidString == Self.service }) {
-//            self.service = service
-//            peripheral.discoverCharacteristics([CBUUID(string: Self.characteristic)], for: service)
-//        } else {
-//            peripheral.services?.forEach({
-//                serv in
-//                peripheral.discoverCharacteristics(nil, for: serv)
-//            })
-//        }
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        service.characteristics?.forEach({
-            value in
-            if(value.uuid.uuidString == Self.characteristic) {
-                self.characteristic = characteristic
-                peripheral.setNotifyValue(true, for: value)
-                statePublish.onNext(.init(state: .connected, peripheral: peripheral))
-            } else {
-                peripheral.setNotifyValue(true, for: value)
-            }
-        })
-//        if let characteristics = service.characteristics, let characteristic = characteristics.first(where: { $0.uuid.uuidString == Self.characteristic }) {
-//            self.characteristic = characteristic
-//            peripheral.setNotifyValue(true, for: characteristic)
-//            statePublish.onNext(.init(state: .connected, peripheral: peripheral))
-//        } else {
-//            service.characteristics?.forEach({
-//                value in
-//                peripheral.setNotifyValue(true, for: value)
-//            })
-//        }
-    }
-    
-    let batteryLevelCharacteristicUUID = CBUUID(string: "AE41")
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        let characteristicFind = characteristic.uuid.uuidString == Self.characteristic;
-        if characteristic.uuid == batteryLevelCharacteristicUUID {
-                    if let data = characteristic.value {
-                        let batteryLevel = data[0]
-                        print("Battery Level: \(batteryLevel)%")
-                    }
-                }
-        if !characteristicFind {
-            print("characteristicFindOtherValue", characteristic.uuid.uuidString)
-            print("characteristicFindOtherValue", characteristic.value)
-            return
+        if let services = peripheral.services, let service = services.first(where: { $0.uuid.uuidString == Self.service }) {
+            self.service = service
+            peripheral.discoverCharacteristics([CBUUID(string: Self.characteristic)], for: service)
         }
-        print("characteristicFind", characteristic.uuid.uuidString)
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if let characteristics = service.characteristics, let characteristic = characteristics.first(where: { $0.uuid.uuidString == Self.characteristic }) {
+            self.characteristic = characteristic
+            peripheral.setNotifyValue(true, for: characteristic)
+            statePublish.onNext(.init(state: .connected, peripheral: peripheral))
+        }
+    }
+
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         statePublish.onNext(.init(state: .notification, data: characteristic.value, peripheral: peripheral))
     }
 }
